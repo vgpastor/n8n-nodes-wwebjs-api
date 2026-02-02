@@ -1,0 +1,65 @@
+{
+  "name": "n8n-nodes-wwebjs-api",
+  "version": "1.0.0",
+  "description": "n8n community node for WWebJS REST API — WhatsApp Web automation via whatsapp-web.js",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "whatsapp",
+    "wwebjs",
+    "whatsapp-web",
+    "whatsapp-api",
+    "messaging"
+  ],
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Victor García Pastor",
+    "url": "https://github.com/vgpastor"
+  },
+  "homepage": "https://github.com/vgpastor/n8n-nodes-wwebjs-api",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vgpastor/n8n-nodes-wwebjs-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vgpastor/n8n-nodes-wwebjs-api/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && gulp build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes credentials --write",
+    "lint": "eslint nodes credentials --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/WWebJsApiCredentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/WWebJsApi/WWebJsApi.node.js",
+      "dist/nodes/WWebJsApi/WWebJsApiTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.7",
+    "eslint": "^9.39.2",
+    "gulp": "^5.0.1",
+    "n8n-workflow": "^2.6.0",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "n8n-workflow": ">=2.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
