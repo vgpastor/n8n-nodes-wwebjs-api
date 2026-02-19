@@ -8,8 +8,16 @@
     "whatsapp",
     "wwebjs",
     "whatsapp-web",
+    "whatsapp-web-js",
     "whatsapp-api",
-    "messaging"
+    "messaging",
+    "chat",
+    "automation",
+    "webhook",
+    "wa",
+    "group-chat",
+    "whatsapp-bot",
+    "whatsapp-automation"
   ],
   "license": "Apache-2.0",
   "author": {
@@ -24,7 +32,7 @@
   "bugs": {
     "url": "https://github.com/vgpastor/n8n-nodes-wwebjs-api/issues"
   },
-  "main": "index.js",
+  "main": "dist/nodes/WWebJsApi/WWebJsApi.node.js",
   "scripts": {
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
@@ -35,7 +43,9 @@
     "prepublishOnly": "npm run build"
   },
   "files": [
-    "dist"
+    "dist",
+    "llms.txt",
+    "llms-full.txt"
   ],
   "n8n": {
     "n8nNodesApiVersion": 1,
@@ -60,6 +70,6 @@
     "n8n-workflow": ">=2.0.0"
   },
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=18.0.0"
   }
 }

@@ -28,9 +28,11 @@ export const groupChatFields: INodeProperties[] = [
 	{
 		displayName: 'Session ID',
 		name: 'sessionId',
-		type: 'string',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getSessions' },
 		required: true,
 		default: '',
+		description: 'Session identifier. Select from the list or use an expression. Falls back to credentials default if empty.',
 		displayOptions: { show: { resource: ['groupChat'] } },
 	},
 
@@ -82,6 +84,7 @@ export const groupChatFields: INodeProperties[] = [
 		typeOptions: { rows: 3 },
 		required: true,
 		default: '',
+		description: 'New description text for the group',
 		displayOptions: { show: { resource: ['groupChat'], operation: ['setDescription'] } },
 	},
 ];

@@ -25,9 +25,11 @@ export const contactFields: INodeProperties[] = [
 	{
 		displayName: 'Session ID',
 		name: 'sessionId',
-		type: 'string',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getSessions' },
 		required: true,
 		default: '',
+		description: 'Session identifier. Select from the list or use an expression. Falls back to credentials default if empty.',
 		displayOptions: { show: { resource: ['contact'] } },
 	},
 

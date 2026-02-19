@@ -1,0 +1,31 @@
+{
+	"node": "n8n-nodes-wwebjs-api.wWebJsApi",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Communication"],
+	"subcategories": {
+		"Communication": ["WhatsApp"]
+	},
+	"alias": [
+		"whatsapp",
+		"wwebjs",
+		"whatsapp web",
+		"wa",
+		"chat",
+		"message",
+		"sms",
+		"group",
+		"contact",
+		"channel",
+		"newsletter",
+		"qr code",
+		"session"
+	],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/vgpastor/n8n-nodes-wwebjs-api"
+			}
+		]
+	}
+}

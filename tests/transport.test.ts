@@ -245,7 +245,7 @@ describe('Utility Functions', () => {
 
 		it('should handle multiple occurrences of placeholder', () => {
 			const result = buildEndpoint('/{sessionId}/test/{sessionId}', 'test-session');
-			expect(result).toBe('/test-session/test/{sessionId}');
+			expect(result).toBe('/test-session/test/test-session');
 		});
 	});
 });

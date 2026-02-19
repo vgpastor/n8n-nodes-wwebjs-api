@@ -28,11 +28,11 @@ export const sessionFields: INodeProperties[] = [
 	{
 		displayName: 'Session ID',
 		name: 'sessionId',
-		type: 'string',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getSessions' },
 		required: true,
 		default: '',
-		placeholder: 'my-session',
-		description: 'Unique identifier for the session (alphanumeric and hyphens). Falls back to the default from credentials if empty.',
+		description: 'Unique identifier for the session. Select from the list or switch to expression mode to enter a custom ID. Falls back to the default from credentials if empty.',
 		displayOptions: {
 			show: {
 				resource: ['session'],
