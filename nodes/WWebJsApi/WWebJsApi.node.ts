@@ -263,6 +263,13 @@ async function executeSession(
 			return wpiRequest.call(this, 'GET', '/session/getSessions');
 		case 'start': {
 			const sid = await resolveSessionId(this, i);
+			const startOptions = this.getNodeParameter('options', i, {}) as IDataObject;
+			if (startOptions.webhookUrl) {
+				// Use POST to pass webhookUrl in body (requires wwebjs-api v1.35+)
+				return wpiRequest.call(this, 'POST', buildEndpoint('/session/start/{sessionId}', sid), {
+					webhookUrl: startOptions.webhookUrl as string,
+				});
+			}
 			return wpiRequest.call(this, 'GET', buildEndpoint('/session/start/{sessionId}', sid));
 		}
 		case 'stop': {
@@ -288,6 +295,17 @@ async function executeSession(
 		case 'terminate': {
 			const sid = await resolveSessionId(this, i);
 			return wpiRequest.call(this, 'GET', buildEndpoint('/session/terminate/{sessionId}', sid));
+		}
+		case 'setWebhook': {
+			const sid = await resolveSessionId(this, i);
+			const webhookUrl = this.getNodeParameter('webhookUrl', i) as string;
+			return wpiRequest.call(this, 'PUT', buildEndpoint('/session/setWebhook/{sessionId}', sid), {
+				webhookUrl,
+			});
+		}
+		case 'getWebhook': {
+			const sid = await resolveSessionId(this, i);
+			return wpiRequest.call(this, 'GET', buildEndpoint('/session/getWebhook/{sessionId}', sid));
 		}
 		case 'terminateInactive':
 			return wpiRequest.call(this, 'GET', '/session/terminateInactive');
