@@ -72,8 +72,8 @@ export function validateGroupChatId(chatId: string): ValidationResult {
 
 	const trimmed = chatId.trim();
 
-	// Groups can be either number@g.us or number-timestamp@g.us
-	if (!trimmed.endsWith('@g.us')) {
+	// Groups must match number@g.us or number-timestamp@g.us
+	if (!/^[0-9]+@g\.us$/.test(trimmed) && !GROUP_ID_REGEX.test(trimmed)) {
 		return {
 			valid: false,
 			error: `Invalid group chat ID format: "${trimmed}". Expected format: number@g.us or number-timestamp@g.us`,
@@ -228,13 +228,8 @@ export async function resolveSessionId(
 	executeFn: IExecuteFunctions,
 	itemIndex: number,
 ): Promise<string> {
-	// Try to get from node parameter
-	let sessionId = '';
-	try {
-		sessionId = executeFn.getNodeParameter('sessionId', itemIndex, '') as string;
-	} catch {
-		// Parameter might not exist for some operations
-	}
+	// Try to get from node parameter (default '' avoids throwing when parameter is absent)
+	let sessionId = (executeFn.getNodeParameter('sessionId', itemIndex, '') as string) || '';
 
 	// Fallback to credentials default
 	if (!sessionId) {
@@ -305,5 +300,5 @@ export async function wpiRequest(
  * Builds the endpoint path replacing {sessionId} with the actual value.
  */
 export function buildEndpoint(path: string, sessionId: string): string {
-	return path.replace('{sessionId}', sessionId);
+	return path.replaceAll('{sessionId}', sessionId);
 }

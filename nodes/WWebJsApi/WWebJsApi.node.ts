@@ -1,11 +1,15 @@
 import type {
 	IExecuteFunctions,
+	ILoadOptionsFunctions,
 	INodeExecutionData,
+	INodePropertyOptions,
 	INodeType,
 	INodeTypeDescription,
 	IDataObject,
+	IRequestOptions,
 	NodeConnectionType,
 } from 'n8n-workflow';
+import { NodeOperationError } from 'n8n-workflow';
 
 import {
 	wpiRequest,
@@ -85,6 +89,43 @@ export class WWebJsApi implements INodeType {
 		],
 	};
 
+	methods = {
+		loadOptions: {
+			async getSessions(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				const credentials = await this.getCredentials('wWebJsApi');
+				const baseUrl = (credentials.baseUrl as string).replace(/\/$/, '');
+
+				const options: IRequestOptions = {
+					method: 'GET',
+					uri: `${baseUrl}/session/getSessions`,
+					headers: { 'Content-Type': 'application/json' },
+					json: true,
+				};
+
+				if (credentials.apiKey) {
+					options.headers!['x-api-key'] = credentials.apiKey as string;
+				}
+
+				try {
+					const response = await this.helpers.request(options) as IDataObject;
+					const sessions = (response.data ?? response) as Array<{ id: string; status: string }>;
+
+					if (!Array.isArray(sessions)) {
+						return [];
+					}
+
+					return sessions.map((s) => ({
+						name: `${s.id} (${s.status})`,
+						value: s.id,
+					}));
+				} catch {
+					// If the API is unreachable, return empty list so the user can still type manually
+					return [];
+				}
+			},
+		},
+	};
+
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
@@ -151,7 +192,7 @@ function getChatId(executeFn: IExecuteFunctions, i: number): string {
 	const chatId = executeFn.getNodeParameter('chatId', i) as string;
 	const validation = validateChatId(chatId);
 	if (!validation.valid) {
-		throw new Error(validation.error);
+		throw new NodeOperationError(executeFn.getNode(), validation.error!, { itemIndex: i });
 	}
 	return chatId;
 }
@@ -163,7 +204,7 @@ function getGroupChatId(executeFn: IExecuteFunctions, i: number): string {
 	const chatId = executeFn.getNodeParameter('chatId', i) as string;
 	const validation = validateGroupChatId(chatId);
 	if (!validation.valid) {
-		throw new Error(validation.error);
+		throw new NodeOperationError(executeFn.getNode(), validation.error!, { itemIndex: i });
 	}
 	return chatId;
 }
@@ -175,7 +216,7 @@ function getContactId(executeFn: IExecuteFunctions, i: number): string {
 	const contactId = executeFn.getNodeParameter('contactId', i) as string;
 	const validation = validateContactId(contactId);
 	if (!validation.valid) {
-		throw new Error(validation.error);
+		throw new NodeOperationError(executeFn.getNode(), validation.error!, { itemIndex: i });
 	}
 	return contactId;
 }
@@ -187,7 +228,7 @@ function getPhoneNumber(executeFn: IExecuteFunctions, i: number): string {
 	const number = executeFn.getNodeParameter('number', i) as string;
 	const validation = validatePhoneNumber(number);
 	if (!validation.valid) {
-		throw new Error(validation.error);
+		throw new NodeOperationError(executeFn.getNode(), validation.error!, { itemIndex: i });
 	}
 	return number;
 }
@@ -358,6 +399,14 @@ async function executeClient(
 			const chatId = getChatId(this, i);
 			return wpiRequest.call(this, 'POST', buildEndpoint('/client/unpinChat/{sessionId}', sid), { chatId });
 		}
+		case 'createGroup': {
+			const groupName = this.getNodeParameter('groupName', i) as string;
+			const participantIds = parseParticipantIds(this.getNodeParameter('participantIds', i) as string);
+			if (participantIds.length === 0) {
+				throw new NodeOperationError(this.getNode(), 'At least one participant ID is required', { itemIndex: i });
+			}
+			return wpiRequest.call(this, 'POST', buildEndpoint('/client/createGroup/{sessionId}', sid), { name: groupName, participants: participantIds });
+		}
 		default:
 			throw new Error(`Unknown client operation: ${operation}`);
 	}
@@ -388,7 +437,7 @@ async function executeMessage(
 			const destinationChatId = this.getNodeParameter('destinationChatId', i) as string;
 			const destValidation = validateChatId(destinationChatId);
 			if (!destValidation.valid) {
-				throw new Error(`Destination ${destValidation.error}`);
+				throw new NodeOperationError(this.getNode(), `Destination ${destValidation.error}`, { itemIndex: i });
 			}
 			return wpiRequest.call(this, 'POST', buildEndpoint('/message/forward/{sessionId}', sid), { chatId, messageId, destinationChatId });
 		}

@@ -1,0 +1,34 @@
+# n8n-nodes-wwebjs-api
+
+> n8n community node package for WhatsApp Web automation. Connects n8n workflows to WhatsApp via the WWebJS REST API (wwebjs-api), which wraps whatsapp-web.js. Provides 75+ operations across 7 resources plus a webhook trigger with filtering and authentication.
+
+## Package Info
+
+- npm package: `n8n-nodes-wwebjs-api`
+- License: Apache-2.0
+- Requires: a running [wwebjs-api](https://github.com/avoylenko/wwebjs-api) instance (tested with v1.34.x) and n8n v1.0.0+
+- n8n-workflow: >=2.0.0
+- Node.js: >=20.0.0
+
+## Nodes Provided
+
+- [WWebJS API (Action Node)](https://github.com/vgpastor/n8n-nodes-wwebjs-api): 7 resources (Session, Client, Message, Chat, Group Chat, Contact, Channel) with 75 operations for sending messages, managing sessions, groups, contacts, and channels.
+- [WWebJS API Trigger](https://github.com/vgpastor/n8n-nodes-wwebjs-api): Webhook trigger for 20 WhatsApp events with filters (session, chat, content, sender, group/individual) and authentication (Header Auth, HMAC-SHA256).
+
+## Key Concepts
+
+- **Session**: A WhatsApp Web connection. Must be started and authenticated via QR code before use.
+- **Chat ID format**: `number@c.us` for individuals, `number-timestamp@g.us` for groups, `number@newsletter` for channels.
+- **Content types for sending**: Text (string), Media Base64 (MessageMedia), Media URL (MessageMediaFromURL), Location, Contact vCard, Poll.
+- **Webhook payload**: JSON with `dataType` (event name), `sessionId`, and `data` (event-specific object).
+
+## Documentation
+
+- [README with full API reference](https://github.com/vgpastor/n8n-nodes-wwebjs-api/blob/main/README.md)
+- [Detailed API reference (llms-full.txt)](https://github.com/vgpastor/n8n-nodes-wwebjs-api/blob/main/llms-full.txt)
+
+## Optional
+
+- [wwebjs-api upstream documentation](https://github.com/avoylenko/wwebjs-api): The REST API server this node connects to
+- [whatsapp-web.js documentation](https://github.com/pedroslopez/whatsapp-web.js): The underlying WhatsApp Web client library
+- [n8n node development docs](https://docs.n8n.io/integrations/creating-nodes/): How n8n community nodes work

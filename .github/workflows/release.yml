@@ -1,0 +1,153 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+# Top-level permissions — jobs override as needed
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────
+  # 1. Detect if package.json version changed
+  # ─────────────────────────────────────────────────────
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+      tag_name: ${{ steps.check.outputs.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need all tags
+
+      - name: Check if version tag exists
+        id: check
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${TAG}" >> "$GITHUB_OUTPUT"
+
+          if git rev-parse "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists — skipping release"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag ${TAG} does not exist — will release"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ─────────────────────────────────────────────────────
+  # 2. Run full test suite before releasing
+  # ─────────────────────────────────────────────────────
+  test:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npx tsc --noEmit
+      - run: npm run build
+
+  # ─────────────────────────────────────────────────────
+  # 3. Publish to npm (OIDC Trusted Publishers)
+  # ─────────────────────────────────────────────────────
+  publish-npm:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # required for OIDC / Trusted Publishers
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      # npm >=11.5.1 required for OIDC trusted publishing
+      - name: Ensure npm supports OIDC
+        run: npm install -g npm@latest
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
+
+  # ─────────────────────────────────────────────────────
+  # 4. Publish to GitHub Packages
+  # ─────────────────────────────────────────────────────
+  publish-gpr:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://npm.pkg.github.com
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # GPR requires scoped packages — temporarily scope the name
+      - name: Scope package for GPR
+        run: |
+          node -e "
+            const pkg = require('./package.json');
+            pkg.name = '@vgpastor/n8n-nodes-wwebjs-api';
+            pkg.publishConfig = { registry: 'https://npm.pkg.github.com' };
+            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          "
+
+      - name: Publish to GitHub Packages
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────────────────────
+  # 5. Create git tag + GitHub Release
+  # ─────────────────────────────────────────────────────
+  github-release:
+    needs: [check-version, publish-npm]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "${{ needs.check-version.outputs.tag_name }}"
+          git push origin "${{ needs.check-version.outputs.tag_name }}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.check-version.outputs.tag_name }}
+          name: ${{ needs.check-version.outputs.tag_name }}
+          generate_release_notes: true

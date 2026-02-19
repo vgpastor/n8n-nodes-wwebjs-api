@@ -9,6 +9,7 @@ export const clientOperations: INodeProperties[] = [
 		displayOptions: { show: { resource: ['client'] } },
 		options: [
 			{ name: 'Archive Chat', value: 'archiveChat', description: 'Archive a chat', action: 'Archive a chat' },
+			{ name: 'Create Group', value: 'createGroup', description: 'Create a new group chat', action: 'Create a group' },
 			{ name: 'Get Blocked Contacts', value: 'getBlockedContacts', description: 'Get all blocked contacts', action: 'Get blocked contacts' },
 			{ name: 'Get Chat By ID', value: 'getChatById', description: 'Get a specific chat by its ID', action: 'Get chat by ID' },
 			{ name: 'Get Chats', value: 'getChats', description: 'Get all current chats', action: 'Get all chats' },
@@ -37,10 +38,11 @@ export const clientFields: INodeProperties[] = [
 	{
 		displayName: 'Session ID',
 		name: 'sessionId',
-		type: 'string',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getSessions' },
 		required: true,
 		default: '',
-		description: 'Session identifier. Falls back to credentials default if empty.',
+		description: 'Session identifier. Select from the list or use an expression. Falls back to credentials default if empty.',
 		displayOptions: { show: { resource: ['client'] } },
 	},
 
@@ -182,6 +184,7 @@ export const clientFields: INodeProperties[] = [
 		required: true,
 		default: '',
 		placeholder: '34612345678@c.us',
+		description: 'Unique WhatsApp identifier for the contact (number@c.us)',
 		displayOptions: { show: { resource: ['client'], operation: ['getContactById', 'getProfilePicUrl'] } },
 	},
 
@@ -220,6 +223,31 @@ export const clientFields: INodeProperties[] = [
 		required: true,
 		default: '',
 		placeholder: 'Available',
+		description: 'The new status message to display on your WhatsApp profile',
 		displayOptions: { show: { resource: ['client'], operation: ['setStatus'] } },
+	},
+
+	// ══════════════════════════════════════════════════════════════════
+	// Create Group
+	// ══════════════════════════════════════════════════════════════════
+	{
+		displayName: 'Group Name',
+		name: 'groupName',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: 'My New Group',
+		description: 'The name/subject for the new group',
+		displayOptions: { show: { resource: ['client'], operation: ['createGroup'] } },
+	},
+	{
+		displayName: 'Participant IDs',
+		name: 'participantIds',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: '34612345678@c.us, 34698765432@c.us',
+		description: 'Comma-separated list of participant WhatsApp IDs to add to the group',
+		displayOptions: { show: { resource: ['client'], operation: ['createGroup'] } },
 	},
 ];

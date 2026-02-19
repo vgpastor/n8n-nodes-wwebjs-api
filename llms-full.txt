@@ -1,0 +1,556 @@
+# n8n-nodes-wwebjs-api — Complete API Reference
+
+> n8n community node package for WhatsApp Web automation via WWebJS REST API. This document contains the complete API reference for all operations, parameters, payload formats, and trigger events to help LLMs generate correct n8n workflow configurations.
+
+## Architecture
+
+n8n → n8n-nodes-wwebjs-api (this package) → wwebjs-api (REST server) → whatsapp-web.js (library) → WhatsApp Web
+
+## Compatibility
+
+| Component | Required version |
+|-----------|-----------------|
+| n8n | >= 1.0.0 (n8n-workflow >= 2.0.0) |
+| wwebjs-api | >= 1.34.0 (tested with avoylenko/wwebjs-api v1.34.x) |
+| Node.js | >= 20.0.0 |
+
+## Installation
+
+Install in n8n via Settings → Community Nodes → Install: `n8n-nodes-wwebjs-api`
+
+## Credentials
+
+Credential type: `wWebJsApi` (display name: "WWebJS API")
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| baseUrl | string | yes | `http://localhost:3000` | URL of wwebjs-api instance |
+| apiKey | string (password) | no | — | API key (`x-api-key` header) |
+| defaultSessionId | string | no | — | Fallback session ID when not specified in node |
+
+## ID Format Reference
+
+| Type | Format | Example |
+|------|--------|---------|
+| Individual chat | `number@c.us` | `34612345678@c.us` |
+| Group chat | `number-timestamp@g.us` | `120363012345678@g.us` |
+| Channel | `number@newsletter` | `120363XXXXXXXXX@newsletter` |
+| Phone number | digits only (7-15) | `34612345678` |
+| Message ID | serialized string | `false_34612345678@c.us_ABCDEF123456` |
+
+---
+
+## Action Node: WWebJS API
+
+Node name: `wWebJsApi`
+Display name: "WWebJS API"
+7 resources, 75 operations total.
+
+### Resource: Session (10 operations)
+
+All session operations manage WhatsApp Web connections.
+
+#### Get All Sessions
+- Operation: `getSessions`
+- Parameters: none
+- Returns: array of `{ id, status }` objects
+
+#### Start Session
+- Operation: `start`
+- Parameters: `sessionId` (string, required)
+- Returns: session start confirmation
+
+#### Stop Session
+- Operation: `stop`
+- Parameters: `sessionId` (string, required)
+
+#### Get Status
+- Operation: `getStatus`
+- Parameters: `sessionId` (string, required)
+- Returns: `{ status: "WORKING" | "STARTING" | "STOPPED" | ... }`
+
+#### Get QR Code
+- Operation: `getQrCode`
+- Parameters: `sessionId` (string, required)
+- Returns: QR code as string
+
+#### Get QR Image
+- Operation: `getQrImage`
+- Parameters: `sessionId` (string, required)
+- Returns: QR code as PNG image data
+
+#### Restart Session
+- Operation: `restart`
+- Parameters: `sessionId` (string, required)
+
+#### Terminate Session
+- Operation: `terminate`
+- Parameters: `sessionId` (string, required)
+- Deletes session data permanently
+
+#### Terminate Inactive
+- Operation: `terminateInactive`
+- Parameters: none
+
+#### Terminate All
+- Operation: `terminateAll`
+- Parameters: none
+
+---
+
+### Resource: Client (20 operations)
+
+Core messaging and contact operations. All require `sessionId`.
+
+#### Send Message
+- Operation: `sendMessage`
+- Parameters:
+  - `sessionId` (string, required)
+  - `chatId` (string, required) — format: `number@c.us` or `number@g.us`
+  - `contentType` (options, required): `string` | `MessageMedia` | `MessageMediaFromURL` | `Location` | `Contact` | `Poll`
+  - `content` (string) — for text messages (contentType=string)
+  - `contentJson` (JSON) — for non-text types (see Content Type Formats below)
+  - Options (collection):
+    - `quotedMessageId` (string) — message ID to reply/quote
+    - `mentions` (string) — comma-separated contact IDs to mention
+    - `sendSeen` (boolean) — mark chat as seen after sending
+
+#### Create Group
+- Operation: `createGroup`
+- Parameters:
+  - `sessionId` (string, required)
+  - `groupName` (string, required) — name for the new group
+  - `participantIds` (string, required) — comma-separated WhatsApp IDs (e.g. `34612345678@c.us, 34698765432@c.us`)
+
+#### Get Chats
+- Operation: `getChats`
+- Parameters: `sessionId`
+- Returns: array of all chats
+
+#### Get Chat By ID
+- Operation: `getChatById`
+- Parameters: `sessionId`, `chatId`
+
+#### Get Contacts
+- Operation: `getContacts`
+- Parameters: `sessionId`
+- Returns: array of all contacts
+
+#### Get Contact By ID
+- Operation: `getContactById`
+- Parameters: `sessionId`, `contactId` (format: `number@c.us`)
+
+#### Get Connection State
+- Operation: `getState`
+- Parameters: `sessionId`
+
+#### Is Registered User
+- Operation: `isRegisteredUser`
+- Parameters: `sessionId`, `number` (phone number, digits only, no + sign)
+- Returns: `{ exists: true/false }`
+
+#### Get Number ID
+- Operation: `getNumberId`
+- Parameters: `sessionId`, `number` (phone number, digits only)
+- Returns: WhatsApp ID for the number
+
+#### Search Messages
+- Operation: `searchMessages`
+- Parameters:
+  - `sessionId`
+  - `query` (string, required) — search text
+  - Search Options: `limit` (number, default 10), `page` (number, default 1)
+
+#### Send Seen
+- Operation: `sendSeen`
+- Parameters: `sessionId`, `chatId`
+
+#### Set Status
+- Operation: `setStatus`
+- Parameters: `sessionId`, `status` (string — the status text)
+
+#### Get Profile Picture URL
+- Operation: `getProfilePicUrl`
+- Parameters: `sessionId`, `contactId`
+
+#### Get Blocked Contacts
+- Operation: `getBlockedContacts`
+- Parameters: `sessionId`
+
+#### Archive Chat
+- Operation: `archiveChat`
+- Parameters: `sessionId`, `chatId`
+
+#### Unarchive Chat
+- Operation: `unarchiveChat`
+- Parameters: `sessionId`, `chatId`
+
+#### Mute Chat
+- Operation: `muteChat`
+- Parameters: `sessionId`, `chatId`, `unmuteDate` (optional unix timestamp)
+
+#### Unmute Chat
+- Operation: `unmuteChat`
+- Parameters: `sessionId`, `chatId`
+
+#### Pin Chat
+- Operation: `pinChat`
+- Parameters: `sessionId`, `chatId`
+
+#### Unpin Chat
+- Operation: `unpinChat`
+- Parameters: `sessionId`, `chatId`
+
+---
+
+### Resource: Message (9 operations)
+
+All require `sessionId`, `chatId`, and `messageId`.
+
+#### Get Info
+- Operation: `getInfo`
+- Returns: message delivery info (sent, delivered, read timestamps)
+
+#### Reply
+- Operation: `reply`
+- Additional parameters: `contentType`, `content`/`contentJson` (same as Send Message but without Poll)
+
+#### React
+- Operation: `react`
+- Additional: `reaction` (string — emoji, e.g. "👍". Empty string removes reaction)
+
+#### Forward
+- Operation: `forward`
+- Additional: `destinationChatId` (string, format: `number@c.us` or `number@g.us`)
+
+#### Edit
+- Operation: `edit`
+- Additional: `editContent` (string — new message text)
+
+#### Delete
+- Operation: `delete`
+- Additional: `everyone` (boolean — delete for everyone or just for me)
+
+#### Download Media
+- Operation: `downloadMedia`
+- Returns: media data (base64 + mimetype)
+
+#### Star / Unstar
+- Operations: `star`, `unstar`
+
+---
+
+### Resource: Chat (10 operations)
+
+All require `sessionId` and `chatId`.
+
+#### Get Info
+- Operation: `getInfo`
+
+#### Fetch Messages
+- Operation: `fetchMessages`
+- Options: `limit` (number, default 50), `fromMe` (boolean)
+
+#### Get Contact
+- Operation: `getContact`
+
+#### Send Typing State
+- Operation: `sendStateTyping`
+
+#### Send Recording State
+- Operation: `sendStateRecording`
+
+#### Clear Messages
+- Operation: `clearMessages`
+
+#### Delete Chat
+- Operation: `delete`
+
+#### Send Seen
+- Operation: `sendSeen`
+
+#### Mark Unread
+- Operation: `markUnread`
+
+#### Get Labels
+- Operation: `getLabels`
+
+---
+
+### Resource: Group Chat (10 operations)
+
+All require `sessionId` and `chatId` (format: `number@g.us`).
+
+#### Get Info
+- Operation: `getInfo`
+
+#### Add Participants
+- Operation: `addParticipants`
+- Additional: `participantIds` (comma-separated `number@c.us` IDs)
+
+#### Remove Participants
+- Operation: `removeParticipants`
+- Additional: `participantIds`
+
+#### Promote Participants
+- Operation: `promoteParticipants`
+- Additional: `participantIds`
+
+#### Demote Participants
+- Operation: `demoteParticipants`
+- Additional: `participantIds`
+
+#### Get Invite Code
+- Operation: `getInviteCode`
+
+#### Leave Group
+- Operation: `leave`
+
+#### Revoke Invite
+- Operation: `revokeInvite`
+
+#### Set Subject
+- Operation: `setSubject`
+- Additional: `subject` (string)
+
+#### Set Description
+- Operation: `setDescription`
+- Additional: `description` (string)
+
+---
+
+### Resource: Contact (7 operations)
+
+All require `sessionId` and `contactId` (format: `number@c.us`).
+
+| Operation | Value | Description |
+|-----------|-------|-------------|
+| Get Info | `getInfo` | Get contact details |
+| Block | `block` | Block a contact |
+| Unblock | `unblock` | Unblock a contact |
+| Get About | `getAbout` | Get status/about text |
+| Get Chat | `getChat` | Get chat for contact |
+| Get Profile Pic | `getProfilePicUrl` | Get profile picture URL |
+| Get Common Groups | `getCommonGroups` | Get shared groups |
+
+---
+
+### Resource: Channel (9 operations)
+
+WhatsApp Channels/Newsletters. Require `sessionId`. Most require `chatId` (format: `number@newsletter`).
+
+| Operation | Value | Needs chatId | Description |
+|-----------|-------|-------------|-------------|
+| Get All | `getAll` | no | List subscribed channels |
+| Get Info | `getInfo` | yes | Get channel details |
+| Send Message | `sendMessage` | yes | Send to channel (text/media) |
+| Fetch Messages | `fetchMessages` | yes | Load channel messages |
+| Subscribe | `subscribe` | yes | Subscribe to channel |
+| Unsubscribe | `unsubscribe` | yes | Unsubscribe from channel |
+| Create | `create` | no | Create new channel (name + optional description) |
+| Search | `search` | no | Search public channels by query |
+| Delete | `delete` | yes | Delete channel you own |
+
+---
+
+## Content Type JSON Formats
+
+When using Send Message (or Reply) with non-text content types, the `contentJson` field expects:
+
+### MessageMedia (Base64)
+```json
+{
+  "mimetype": "image/jpeg",
+  "data": "base64-encoded-data-here",
+  "filename": "photo.jpg"
+}
+```
+
+### MessageMediaFromURL
+```json
+{
+  "url": "https://example.com/image.jpg",
+  "caption": "Optional caption text"
+}
+```
+
+### Location
+```json
+{
+  "latitude": 40.4168,
+  "longitude": -3.7038,
+  "description": "Madrid, Spain"
+}
+```
+
+### Contact (vCard)
+```json
+{
+  "displayName": "John Doe",
+  "vcard": "BEGIN:VCARD\nVERSION:3.0\nFN:John Doe\nTEL:+34612345678\nEND:VCARD"
+}
+```
+
+### Poll
+```json
+{
+  "pollName": "What do you prefer?",
+  "pollOptions": ["Option A", "Option B", "Option C"],
+  "options": {
+    "allowMultipleAnswers": false
+  }
+}
+```
+
+---
+
+## Trigger Node: WWebJS API Trigger
+
+Node name: `wWebJsApiTrigger`
+Display name: "WWebJS API Trigger"
+Receives WhatsApp events via webhook (POST).
+
+### Events (20 available)
+
+| Event Value | Display Name | Description |
+|-------------|-------------|-------------|
+| `message` | Message Received | New incoming message (default) |
+| `message_create` | Message Created | Any message including sent |
+| `message_ack` | Message ACK | Delivery status update |
+| `message_revoke_everyone` | Message Revoked (Everyone) | Deleted for everyone |
+| `message_revoke_me` | Message Revoked (Me) | Deleted for me |
+| `qr` | QR Code | QR for authentication |
+| `authenticated` | Authenticated | Client authenticated |
+| `auth_failure` | Authentication Failure | Auth failed |
+| `ready` | Ready | Client ready |
+| `disconnected` | Disconnected | Client disconnected |
+| `change_state` | Connection State Changed | State changed |
+| `group_join` | Group Join | Someone joined group |
+| `group_leave` | Group Leave | Someone left group |
+| `group_update` | Group Update | Group info updated |
+| `call` | Call Received | Incoming call |
+| `chat_archived` | Chat Archived | Chat archived/unarchived |
+| `chat_removed` | Chat Removed | Chat removed |
+| `loading_screen` | Loading Screen | Loading progress |
+| `media_uploaded` | Media Uploaded | Media upload complete |
+| `contact_changed` | Contact Changed | Contact updated |
+
+### Authentication Options
+
+| Method | Parameters |
+|--------|-----------|
+| `none` | No authentication |
+| `headerAuth` | `headerName` (default: `x-webhook-token`), `headerValue` (password) |
+| `hmacSignature` | `hmacSecret` (password), `signatureHeader` (default: `x-hub-signature-256`) |
+
+### Filters (collection)
+
+| Filter | Type | Description |
+|--------|------|-------------|
+| `sessionId` | string | Only events from this session |
+| `chatIdContains` | string | Chat ID must contain this (e.g. phone number, `@g.us`) |
+| `bodyContains` | string | Message body must contain this (case-insensitive) |
+| `fromMe` | boolean | Only messages from current user |
+| `excludeFromMe` | boolean | Only messages from others |
+| `groupsOnly` | boolean | Only group chat messages |
+| `individualsOnly` | boolean | Only individual chat messages |
+
+Note: `fromMe` + `excludeFromMe` are mutually exclusive. `groupsOnly` + `individualsOnly` are mutually exclusive.
+
+### Webhook Payload Structure
+
+```json
+{
+  "dataType": "message",
+  "sessionId": "my-session",
+  "data": {
+    "from": "34612345678@c.us",
+    "to": "34698765432@c.us",
+    "body": "Hello!",
+    "fromMe": false,
+    "hasMedia": false,
+    "type": "chat",
+    "timestamp": 1234567890,
+    "id": {
+      "fromMe": false,
+      "remote": "34612345678@c.us",
+      "id": "ABCDEF123456",
+      "_serialized": "false_34612345678@c.us_ABCDEF123456"
+    }
+  }
+}
+```
+
+### n8n Expressions for Payload Fields
+
+| Field | Expression |
+|-------|-----------|
+| Chat ID (sender) | `{{ $json.data.from }}` |
+| Message text | `{{ $json.data.body }}` |
+| Session ID | `{{ $json.sessionId }}` |
+| Event type | `{{ $json.dataType }}` |
+| Message ID | `{{ $json.data.id._serialized }}` |
+| Is from me | `{{ $json.data.fromMe }}` |
+| Has media | `{{ $json.data.hasMedia }}` |
+| Timestamp | `{{ $json.data.timestamp }}` |
+
+---
+
+## Common Workflow Patterns
+
+### Send a text message
+1. Add WWebJS API node
+2. Resource: Client, Operation: Send Message
+3. Set chatId: `34612345678@c.us`, contentType: `string`, content: "Hello!"
+
+### Auto-reply to incoming messages
+1. WWebJS API Trigger (event: message, filter: excludeFromMe=true)
+2. WWebJS API node → Client → Send Message
+3. chatId: `{{ $json.data.from }}`, content: "Auto-reply text"
+
+### Send image from URL
+1. WWebJS API node → Client → Send Message
+2. contentType: `MessageMediaFromURL`
+3. contentJson: `{"url": "https://example.com/photo.jpg", "caption": "Look!"}`
+
+### Forward a message
+1. WWebJS API Trigger (event: message)
+2. WWebJS API node → Message → Forward
+3. chatId: `{{ $json.data.from }}`, messageId: `{{ $json.data.id._serialized }}`, destinationChatId: `34698765432@c.us`
+
+### Check if number exists on WhatsApp
+1. WWebJS API node → Client → Is Registered User
+2. number: `34612345678` (digits only, no +)
+
+### Manage group participants
+1. WWebJS API node → Group Chat → Add Participants
+2. chatId: `120363012345678@g.us`, participantIds: `34612345678@c.us, 34698765432@c.us`
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Session stuck on STARTING | Check wwebjs-api logs, terminate and restart session |
+| QR code expired | QR codes expire in ~60s; use Get QR Image for fresh one |
+| `status@broadcast` in events | Filter with chatIdContains=`@c.us` or `@g.us` |
+| Empty media download | Check `hasMedia: true` in payload first |
+| Webhook not receiving | Verify BASE_WEBHOOK_URL, activate workflow, check network |
+| Invalid ID format | Use `number@c.us` (individual), `number@g.us` (group), `number@newsletter` (channel) |
+
+---
+
+## Webhook Setup (wwebjs-api environment)
+
+```env
+# Global webhook (all sessions)
+BASE_WEBHOOK_URL=https://your-n8n.com/webhook/abc123
+
+# Per-session webhooks
+SALES_WEBHOOK_URL=https://your-n8n.com/webhook/sales
+SUPPORT_WEBHOOK_URL=https://your-n8n.com/webhook/support
+
+# Disable specific events
+DISABLED_CALLBACKS=message_ack,chat_removed,loading_screen
+```

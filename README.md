@@ -30,7 +30,7 @@ This node provides a bridge between n8n and WhatsApp Web, powered by the excelle
 
 This package provides two nodes:
 
-- **WWebJS API** — Action node with 7 resources and 60+ operations
+- **WWebJS API** — Action node with 7 resources and 75+ operations
 - **WWebJS API Trigger** — Webhook trigger for incoming WhatsApp events with advanced filtering
 
 ### Highlights
@@ -44,6 +44,20 @@ This package provides two nodes:
 - Webhook authentication (Header Auth, HMAC signature)
 - Input validation with descriptive error messages
 
+## Compatibility
+
+| Component | Required version | Notes |
+|-----------|-----------------|-------|
+| **n8n** | >= 1.0.0 | `n8n-workflow` >= 2.0.0 |
+| **wwebjs-api** | >= 1.34.0 | Tested with [avoylenko/wwebjs-api](https://github.com/avoylenko/wwebjs-api) v1.34.x |
+| **Node.js** | >= 20.0.0 | Required by dev tooling; n8n itself requires >= 22.16 |
+
+> **Note:** This package depends on the REST API exposed by wwebjs-api.
+> Since wwebjs-api does not version its endpoints, a future major release
+> could introduce breaking changes. Pin your wwebjs-api Docker image to a
+> specific tag (e.g. `avoylenko/wwebjs-api:1.34.6`) instead of using `:latest`
+> to avoid surprises.
+
 ## Prerequisites
 
 1. **WWebJS API instance** running and accessible — [Setup instructions](https://github.com/avoylenko/wwebjs-api#installation)
@@ -55,7 +69,7 @@ This package provides two nodes:
 version: '3.8'
 services:
   wwebjs-api:
-    image: avoylenko/wwebjs-api:latest
+    image: avoylenko/wwebjs-api:1.34.6
     ports:
       - "3000:3000"
     environment:
@@ -132,15 +146,49 @@ In n8n, go to **Settings → Credentials → Add Credential → WWebJS API** and
 | API Key            | The `API_KEY` env var from your WWebJS API            | `my-secret-key`         |
 | Default Session ID | Default session to use when not specified in the node | `main-session`          |
 
-### 2. Configure webhook URL in WWebJS API
+### 2. Configure webhook in WWebJS API
 
-Set the `BASE_WEBHOOK_URL` env var in your WWebJS API instance to point to your n8n webhook URL:
+To receive WhatsApp events in n8n, you need to configure wwebjs-api to send events to your n8n webhook URL.
+
+**Steps:**
+1. **Create a workflow** in n8n with the **WWebJS API Trigger** node
+2. **Activate the workflow** - n8n will generate a webhook URL (e.g., `https://your-n8n.com/webhook/abc123`)
+3. **Copy that URL** and configure it in wwebjs-api environment variables:
+
+#### Option A: Global webhook (All sessions)
+
+All sessions send events to the same URL:
 
 ```env
-BASE_WEBHOOK_URL=https://your-n8n-instance.com/webhook/whatsapp
+BASE_WEBHOOK_URL=https://your-n8n.com/webhook/abc123
 ```
 
-You can find the exact URL in the **WWebJS API Trigger** node settings.
+> **Tip:** Use the **Session ID** filter in the trigger node to route events from different sessions to different workflows.
+
+#### Option B: Per-session webhook
+
+Each session can have its own webhook URL using the pattern `{SESSIONID}_WEBHOOK_URL`:
+
+```env
+# Global fallback
+BASE_WEBHOOK_URL=https://your-n8n.com/webhook/default
+
+# Session "sales" sends to a different workflow
+SALES_WEBHOOK_URL=https://your-n8n.com/webhook/sales-workflow
+
+# Session "support" sends to another workflow
+SUPPORT_WEBHOOK_URL=https://your-n8n.com/webhook/support-workflow
+```
+
+#### Additional webhook options
+
+```env
+# Disable webhooks entirely (if using websockets instead)
+ENABLE_WEBHOOK=FALSE
+
+# Disable specific events you don't need
+DISABLED_CALLBACKS=message_ack,chat_removed,loading_screen
+```
 
 ## Resources & Operations
 
@@ -164,6 +212,7 @@ You can find the exact URL in the **WWebJS API Trigger** node settings.
 | Operation            | Description                                  |
 | -------------------- | -------------------------------------------- |
 | Send Message         | Send text, media, location, contact, or poll |
+| Create Group         | Create a new group chat with participants    |
 | Get Chats            | Get all current chats                        |
 | Get Chat By ID       | Get a specific chat                          |
 | Get Contacts         | Get all contacts                             |
@@ -270,6 +319,11 @@ The **WWebJS API Trigger** node can listen for these events:
 | `group_leave`             | Someone left a group                      |
 | `group_update`            | Group info updated                        |
 | `call`                    | Incoming call                             |
+| `chat_archived`           | Chat was archived/unarchived              |
+| `chat_removed`            | Chat was removed                          |
+| `loading_screen`          | Loading screen progress                   |
+| `media_uploaded`          | Media has been uploaded                   |
+| `contact_changed`         | Contact has been updated                  |
 
 ### Trigger Filters
 
@@ -333,6 +387,117 @@ Secure your webhook endpoint:
 2. Add **WWebJS API** node with **Message → Forward**
 3. Use `{{ $json.data.id._serialized }}` for Message ID
 4. Set destination Chat ID
+
+## Webhook Payload Structure
+
+When the trigger node receives an event, the payload has this structure:
+
+```json
+{
+  "dataType": "message",
+  "sessionId": "my-session",
+  "data": {
+    "from": "34612345678@c.us",
+    "to": "34698765432@c.us",
+    "body": "Hello!",
+    "fromMe": false,
+    "hasMedia": false,
+    "type": "chat",
+    "timestamp": 1234567890,
+    "id": {
+      "fromMe": false,
+      "remote": "34612345678@c.us",
+      "id": "ABCDEF123456",
+      "_serialized": "false_34612345678@c.us_ABCDEF123456"
+    }
+  }
+}
+```
+
+Use n8n expressions to access fields, for example:
+- Chat ID: `{{ $json.data.from }}`
+- Message text: `{{ $json.data.body }}`
+- Session: `{{ $json.sessionId }}`
+- Message ID: `{{ $json.data.id._serialized }}`
+
+## Content Type JSON Formats
+
+When using **Send Message** with non-text content types, the **Content (JSON)** field expects these formats:
+
+**Media (Base64) — `MessageMedia`**
+```json
+{
+  "mimetype": "image/jpeg",
+  "data": "base64-encoded-data...",
+  "filename": "photo.jpg"
+}
+```
+
+**Media (URL) — `MessageMediaFromURL`**
+```json
+{
+  "url": "https://example.com/image.jpg",
+  "caption": "Check this out!"
+}
+```
+
+**Location**
+```json
+{
+  "latitude": 40.4168,
+  "longitude": -3.7038,
+  "description": "Madrid, Spain"
+}
+```
+
+**Contact (vCard)**
+```json
+{
+  "displayName": "John Doe",
+  "vcard": "BEGIN:VCARD\nVERSION:3.0\nFN:John Doe\nTEL:+34612345678\nEND:VCARD"
+}
+```
+
+**Poll**
+```json
+{
+  "pollName": "What do you prefer?",
+  "pollOptions": ["Option A", "Option B", "Option C"],
+  "options": {
+    "allowMultipleAnswers": false
+  }
+}
+```
+
+## Troubleshooting
+
+**Session not connecting / stuck on STARTING**
+- Ensure your wwebjs-api instance is running and accessible from n8n
+- Check the wwebjs-api logs for errors
+- Try terminating and restarting the session
+
+**QR code expired**
+- QR codes expire after ~60 seconds. Use the **Get QR Image** operation to get a fresh one
+- You can set up a workflow to periodically poll the QR code endpoint
+
+**`status@broadcast` errors**
+- Some events include `status@broadcast` as the chat ID. Use the **Chat ID Contains** filter to exclude these by filtering for `@c.us` or `@g.us`
+
+**Media messages returning empty data**
+- Ensure the message actually has media (`hasMedia: true` in the webhook payload)
+- Use the **Message → Download Media** operation with the correct chat ID and message ID
+
+**Webhook not receiving events**
+- Verify `BASE_WEBHOOK_URL` is set correctly in your wwebjs-api environment
+- Make sure the n8n workflow with the trigger is **activated**
+- Check that the webhook URL is reachable from the wwebjs-api container (use container networking if both run in Docker)
+- Check `DISABLED_CALLBACKS` is not blocking the events you need
+
+**Invalid chat/contact ID format errors**
+- Individual chats: `number@c.us` (e.g., `34612345678@c.us`)
+- Group chats: `number@g.us` or `number-timestamp@g.us`
+- Channels: `number@newsletter`
+- Phone numbers: digits only, no `+` sign, 7-15 digits
 
 ## Development
 

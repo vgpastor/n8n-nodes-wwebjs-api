@@ -27,9 +27,11 @@ export const messageFields: INodeProperties[] = [
 	{
 		displayName: 'Session ID',
 		name: 'sessionId',
-		type: 'string',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getSessions' },
 		required: true,
 		default: '',
+		description: 'Session identifier. Select from the list or use an expression. Falls back to credentials default if empty.',
 		displayOptions: { show: { resource: ['message'] } },
 	},
 
@@ -68,6 +70,7 @@ export const messageFields: INodeProperties[] = [
 			{ name: 'Contact (vCard)', value: 'Contact' },
 		],
 		default: 'string',
+		description: 'The type of reply content to send',
 		displayOptions: { show: { resource: ['message'], operation: ['reply'] } },
 	},
 	{
@@ -77,6 +80,7 @@ export const messageFields: INodeProperties[] = [
 		typeOptions: { rows: 3 },
 		required: true,
 		default: '',
+		description: 'The text content of the reply',
 		displayOptions: { show: { resource: ['message'], operation: ['reply'], contentType: ['string'] } },
 	},
 	{
@@ -85,6 +89,7 @@ export const messageFields: INodeProperties[] = [
 		type: 'json',
 		required: true,
 		default: '{}',
+		description: 'The content object (media, location, or contact). See API docs for the expected JSON structure.',
 		displayOptions: {
 			show: {
 				resource: ['message'],
@@ -125,6 +130,7 @@ export const messageFields: INodeProperties[] = [
 		typeOptions: { rows: 3 },
 		required: true,
 		default: '',
+		description: 'The new text content for the message',
 		displayOptions: { show: { resource: ['message'], operation: ['edit'] } },
 	},
 

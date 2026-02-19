@@ -1,0 +1,27 @@
+{
+	"node": "n8n-nodes-wwebjs-api.wWebJsApiTrigger",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Communication"],
+	"subcategories": {
+		"Communication": ["WhatsApp"]
+	},
+	"alias": [
+		"whatsapp",
+		"wwebjs",
+		"whatsapp web",
+		"wa",
+		"webhook",
+		"message received",
+		"incoming message",
+		"whatsapp trigger",
+		"chat event"
+	],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/vgpastor/n8n-nodes-wwebjs-api"
+			}
+		]
+	}
+}

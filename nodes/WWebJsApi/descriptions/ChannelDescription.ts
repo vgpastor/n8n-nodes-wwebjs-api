@@ -27,9 +27,11 @@ export const channelFields: INodeProperties[] = [
 	{
 		displayName: 'Session ID',
 		name: 'sessionId',
-		type: 'string',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getSessions' },
 		required: true,
 		default: '',
+		description: 'Session identifier. Select from the list or use an expression. Falls back to credentials default if empty.',
 		displayOptions: { show: { resource: ['channel'] } },
 	},
 
@@ -61,6 +63,7 @@ export const channelFields: INodeProperties[] = [
 			{ name: 'Media (URL)', value: 'MessageMediaFromURL' },
 		],
 		default: 'string',
+		description: 'The type of message content to send to the channel',
 		displayOptions: { show: { resource: ['channel'], operation: ['sendMessage'] } },
 	},
 	{
@@ -70,6 +73,7 @@ export const channelFields: INodeProperties[] = [
 		typeOptions: { rows: 3 },
 		required: true,
 		default: '',
+		description: 'The text content of the channel message',
 		displayOptions: { show: { resource: ['channel'], operation: ['sendMessage'], contentType: ['string'] } },
 	},
 	{
@@ -78,6 +82,7 @@ export const channelFields: INodeProperties[] = [
 		type: 'json',
 		required: true,
 		default: '{}',
+		description: 'The media content object. See API docs for the expected JSON structure.',
 		displayOptions: {
 			show: {
 				resource: ['channel'],
@@ -94,6 +99,7 @@ export const channelFields: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
+		description: 'The name for the new channel',
 		displayOptions: { show: { resource: ['channel'], operation: ['create'] } },
 	},
 	{
@@ -102,6 +108,7 @@ export const channelFields: INodeProperties[] = [
 		type: 'string',
 		typeOptions: { rows: 3 },
 		default: '',
+		description: 'Optional description for the new channel',
 		displayOptions: { show: { resource: ['channel'], operation: ['create'] } },
 	},
 
@@ -112,6 +119,7 @@ export const channelFields: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
+		description: 'Text to search for in public channel names and descriptions',
 		displayOptions: { show: { resource: ['channel'], operation: ['search'] } },
 	},
 ];

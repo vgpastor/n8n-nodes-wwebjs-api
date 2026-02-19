@@ -1,41 +1,13 @@
 import { describe, it, expect } from 'vitest';
-
-// Test helper functions that would be used in the trigger
-// Since the trigger uses internal functions, we'll test the logic separately
+import {
+	safeString,
+	safeBoolean,
+	extractChatId,
+	validateSignature,
+} from '../nodes/WWebJsApi/triggerFilters';
+import type { IDataObject } from 'n8n-workflow';
 
 describe('Trigger Filter Logic', () => {
-	// Helper functions mimicking the trigger's internal logic
-	function safeString(value: unknown, fallback = ''): string {
-		if (typeof value === 'string') {
-			return value;
-		}
-		return fallback;
-	}
-
-	function safeBoolean(value: unknown, fallback = false): boolean {
-		if (typeof value === 'boolean') {
-			return value;
-		}
-		return fallback;
-	}
-
-	interface WebhookData {
-		from?: string;
-		chatId?: string;
-		body?: string;
-		fromMe?: boolean;
-	}
-
-	function extractChatId(data: WebhookData): string {
-		const from = safeString(data.from);
-		if (from) return from;
-
-		const chatId = safeString(data.chatId);
-		if (chatId) return chatId;
-
-		return '';
-	}
-
 	describe('safeString', () => {
 		it('should return string value', () => {
 			expect(safeString('hello')).toBe('hello');
@@ -79,23 +51,63 @@ describe('Trigger Filter Logic', () => {
 
 	describe('extractChatId', () => {
 		it('should extract from "from" field', () => {
-			const data = { from: '34612345678@c.us' };
+			const data: IDataObject = { from: '34612345678@c.us' };
 			expect(extractChatId(data)).toBe('34612345678@c.us');
 		});
 
 		it('should fallback to "chatId" field', () => {
-			const data = { chatId: '34612345678@g.us' };
+			const data: IDataObject = { chatId: '34612345678@g.us' };
 			expect(extractChatId(data)).toBe('34612345678@g.us');
 		});
 
 		it('should prefer "from" over "chatId"', () => {
-			const data = { from: '111@c.us', chatId: '222@c.us' };
+			const data: IDataObject = { from: '111@c.us', chatId: '222@c.us' };
 			expect(extractChatId(data)).toBe('111@c.us');
 		});
 
 		it('should return empty string if no chat ID found', () => {
-			const data = {};
+			const data: IDataObject = {};
 			expect(extractChatId(data)).toBe('');
+		});
+
+		it('should extract from nested chat.id', () => {
+			const data: IDataObject = { chat: { id: '123@c.us' } };
+			expect(extractChatId(data)).toBe('123@c.us');
+		});
+
+		it('should extract from nested chat.id._serialized', () => {
+			const data: IDataObject = { chat: { id: { _serialized: '123@c.us' } } };
+			expect(extractChatId(data)).toBe('123@c.us');
+		});
+	});
+
+	describe('validateSignature', () => {
+		it('should validate correct HMAC signature with sha256= prefix', () => {
+			const crypto = require('crypto');
+			const secret = 'test-secret';
+			const payload = '{"test": true}';
+			const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+			expect(validateSignature(payload, `sha256=${hash}`, secret)).toBe(true);
+		});
+
+		it('should validate correct HMAC signature without prefix', () => {
+			const crypto = require('crypto');
+			const secret = 'test-secret';
+			const payload = '{"test": true}';
+			const hash = crypto.createHmac('sha256', secret).update(payload).digest('hex');
+			expect(validateSignature(payload, hash, secret)).toBe(true);
+		});
+
+		it('should reject invalid signature', () => {
+			expect(validateSignature('payload', 'invalid-sig', 'secret')).toBe(false);
+		});
+
+		it('should reject empty secret', () => {
+			expect(validateSignature('payload', 'sig', '')).toBe(false);
+		});
+
+		it('should reject empty signature', () => {
+			expect(validateSignature('payload', '', 'secret')).toBe(false);
 		});
 	});
 
