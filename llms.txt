@@ -6,8 +6,9 @@
 
 - npm package: `n8n-nodes-wwebjs-api`
 - License: Apache-2.0
-- Requires: a running [wwebjs-api](https://github.com/avoylenko/wwebjs-api) instance and n8n v1.0.0+
-- Node.js: >=18.0.0
+- Requires: a running [wwebjs-api](https://github.com/avoylenko/wwebjs-api) instance (tested with v1.34.x) and n8n v1.0.0+
+- n8n-workflow: >=2.0.0
+- Node.js: >=20.0.0
 
 ## Nodes Provided
 

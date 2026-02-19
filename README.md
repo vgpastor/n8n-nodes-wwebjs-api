@@ -44,6 +44,20 @@ This package provides two nodes:
 - Webhook authentication (Header Auth, HMAC signature)
 - Input validation with descriptive error messages
 
+## Compatibility
+
+| Component | Required version | Notes |
+|-----------|-----------------|-------|
+| **n8n** | >= 1.0.0 | `n8n-workflow` >= 2.0.0 |
+| **wwebjs-api** | >= 1.34.0 | Tested with [avoylenko/wwebjs-api](https://github.com/avoylenko/wwebjs-api) v1.34.x |
+| **Node.js** | >= 20.0.0 | Required by dev tooling; n8n itself requires >= 22.16 |
+
+> **Note:** This package depends on the REST API exposed by wwebjs-api.
+> Since wwebjs-api does not version its endpoints, a future major release
+> could introduce breaking changes. Pin your wwebjs-api Docker image to a
+> specific tag (e.g. `avoylenko/wwebjs-api:1.34.6`) instead of using `:latest`
+> to avoid surprises.
+
 ## Prerequisites
 
 1. **WWebJS API instance** running and accessible — [Setup instructions](https://github.com/avoylenko/wwebjs-api#installation)
@@ -55,7 +69,7 @@ This package provides two nodes:
 version: '3.8'
 services:
   wwebjs-api:
-    image: avoylenko/wwebjs-api:latest
+    image: avoylenko/wwebjs-api:1.34.6
     ports:
       - "3000:3000"
     environment:

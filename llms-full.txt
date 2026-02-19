@@ -6,6 +6,14 @@
 
 n8n → n8n-nodes-wwebjs-api (this package) → wwebjs-api (REST server) → whatsapp-web.js (library) → WhatsApp Web
 
+## Compatibility
+
+| Component | Required version |
+|-----------|-----------------|
+| n8n | >= 1.0.0 (n8n-workflow >= 2.0.0) |
+| wwebjs-api | >= 1.34.0 (tested with avoylenko/wwebjs-api v1.34.x) |
+| Node.js | >= 20.0.0 |
+
 ## Installation
 
 Install in n8n via Settings → Community Nodes → Install: `n8n-nodes-wwebjs-api`
