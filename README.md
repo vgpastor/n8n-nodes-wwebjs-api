@@ -1,7 +1,7 @@
 # n8n-nodes-wwebjs-api
 
 [![npm version](https://img.shields.io/npm/v/n8n-nodes-wwebjs-api.svg)](https://www.npmjs.com/package/n8n-nodes-wwebjs-api)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub](https://img.shields.io/github/stars/vgpastor/n8n-nodes-wwebjs-api?style=social)](https://github.com/vgpastor/n8n-nodes-wwebjs-api)
 
 n8n community node for **[WWebJS REST API](https://github.com/avoylenko/wwebjs-api)** — automate WhatsApp Web messaging from n8n.
@@ -542,7 +542,7 @@ Use this software at your own risk. The authors are not responsible for any bans
 
 ## License
 
-Apache-2.0 - See [LICENSE](LICENSE) for details.
+MIT - See [LICENSE](LICENSE) for details.
 
 ## Contributing
 

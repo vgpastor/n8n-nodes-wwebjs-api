@@ -25,9 +25,10 @@
     "n8n-whatsapp",
     "community-node"
   ],
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": {
     "name": "Victor García Pastor",
+    "email": "info@ingenierosweb.co",
     "url": "https://github.com/vgpastor"
   },
   "homepage": "https://github.com/vgpastor/n8n-nodes-wwebjs-api",
