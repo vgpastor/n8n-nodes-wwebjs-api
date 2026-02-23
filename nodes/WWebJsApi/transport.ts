@@ -2,7 +2,7 @@ import type {
 	IExecuteFunctions,
 	IDataObject,
 	IHttpRequestMethods,
-	IRequestOptions,
+	IHttpRequestOptions,
 	JsonObject,
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
@@ -269,13 +269,12 @@ export async function wpiRequest(
 	const credentials = await this.getCredentials('wWebJsApi');
 	const baseUrl = (credentials.baseUrl as string).replace(/\/$/, '');
 
-	const options: IRequestOptions = {
+	const options: IHttpRequestOptions = {
 		method,
-		uri: `${baseUrl}${endpoint}`,
+		url: `${baseUrl}${endpoint}`,
 		headers: {
 			'Content-Type': 'application/json',
 		},
-		json: true,
 		qs: query,
 	};
 
@@ -288,7 +287,7 @@ export async function wpiRequest(
 	}
 
 	try {
-		return (await this.helpers.request(options)) as IDataObject;
+		return (await this.helpers.httpRequest(options)) as IDataObject;
 	} catch (error) {
 		throw new NodeApiError(this.getNode(), error as JsonObject, {
 			message: `WWebJS API request failed: ${(error as Error).message}`,

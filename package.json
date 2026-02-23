@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-wwebjs-api",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "WhatsApp Web API node for n8n — send messages, manage chats, groups & contacts via WWebJS REST API (whatsapp-web.js)",
   "keywords": [
     "n8n-community-node-package",
