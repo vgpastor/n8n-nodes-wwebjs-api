@@ -164,9 +164,17 @@ export class WWebJsApi implements INodeType {
 				}
 
 				if (Array.isArray(responseData)) {
-					returnData.push(...(responseData as IDataObject[]).map((d) => ({ json: d })));
+					returnData.push(
+						...(responseData as IDataObject[]).map((d) => ({
+							json: { ...items[i].json, ...d },
+							pairedItem: { item: i },
+						})),
+					);
 				} else {
-					returnData.push({ json: responseData });
+					returnData.push({
+						json: { ...items[i].json, ...responseData },
+						pairedItem: { item: i },
+					});
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {

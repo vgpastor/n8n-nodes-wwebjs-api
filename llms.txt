@@ -1,6 +1,6 @@
 # n8n-nodes-wwebjs-api
 
-> n8n community node package for WhatsApp Web automation. Connects n8n workflows to WhatsApp via the WWebJS REST API (wwebjs-api), which wraps whatsapp-web.js. Provides 75+ operations across 7 resources plus a webhook trigger with filtering and authentication.
+> n8n community node package for WhatsApp Web automation. Connects n8n workflows to WhatsApp via the WWebJS REST API (wwebjs-api), which wraps whatsapp-web.js. Provides 75+ operations across 7 resources plus a webhook trigger with filtering and authentication. Full multi-item support with pairedItem tracking and input data forwarding.
 
 ## Package Info
 
@@ -21,6 +21,7 @@
 - **Chat ID format**: `number@c.us` for individuals, `number-timestamp@g.us` for groups, `number@newsletter` for channels.
 - **Content types for sending**: Text (string), Media Base64 (MessageMedia), Media URL (MessageMediaFromURL), Location, Contact vCard, Poll.
 - **Webhook payload**: JSON with `dataType` (event name), `sessionId`, and `data` (event-specific object).
+- **Multi-item support**: The node processes each input item independently, preserves input data in the output (merged with API response), and includes `pairedItem` tracking for correct n8n expression resolution in downstream nodes.
 
 ## Documentation
 

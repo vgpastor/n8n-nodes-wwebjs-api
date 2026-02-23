@@ -1,6 +1,6 @@
 # n8n-nodes-wwebjs-api — Complete API Reference
 
-> n8n community node package for WhatsApp Web automation via WWebJS REST API. This document contains the complete API reference for all operations, parameters, payload formats, and trigger events to help LLMs generate correct n8n workflow configurations.
+> n8n community node package for WhatsApp Web automation via WWebJS REST API. This document contains the complete API reference for all operations, parameters, payload formats, and trigger events to help LLMs generate correct n8n workflow configurations. Supports multi-item processing with pairedItem tracking and input data forwarding.
 
 ## Architecture
 
@@ -493,6 +493,27 @@ Note: `fromMe` + `excludeFromMe` are mutually exclusive. `groupsOnly` + `individ
 | Is from me | `{{ $json.data.fromMe }}` |
 | Has media | `{{ $json.data.hasMedia }}` |
 | Timestamp | `{{ $json.data.timestamp }}` |
+
+---
+
+## Multi-Item Behavior
+
+The action node fully supports n8n's multi-item processing:
+
+- **Per-item execution**: Each input item is processed independently. If the node receives 5 items, it executes the operation 5 times (once per item).
+- **pairedItem tracking**: Every output item includes `pairedItem: { item: i }` so n8n can link it back to its source input. This enables expressions like `$('PreviousNode').item.json.field` in downstream nodes.
+- **Input data forwarding**: The output merges the original input item's JSON with the API response. Input fields are preserved, and API response fields take precedence on name collisions.
+- **Error handling**: With "Continue On Fail" enabled, failed items produce `{ error: "message" }` in the output while other items continue processing normally. Each error item retains its `pairedItem` reference.
+
+### Example: Sending to multiple contacts
+
+If the input contains 3 items with different `chatId` values, the node sends 3 separate messages and returns 3 output items:
+
+| Input item | Output item |
+|------------|-------------|
+| `{ name: "Alice", chatId: "111@c.us" }` | `{ name: "Alice", chatId: "111@c.us", success: true, messageId: "msg1" }` |
+| `{ name: "Bob", chatId: "222@c.us" }` | `{ name: "Bob", chatId: "222@c.us", success: true, messageId: "msg2" }` |
+| `{ name: "Carol", chatId: "333@c.us" }` | `{ name: "Carol", chatId: "333@c.us", success: true, messageId: "msg3" }` |
 
 ---
 
