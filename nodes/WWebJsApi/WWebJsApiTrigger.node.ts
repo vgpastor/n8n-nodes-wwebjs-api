@@ -11,7 +11,7 @@ import { safeString, safeBoolean, extractChatId, validateSignature } from './tri
 
 export class WWebJsApiTrigger implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'WWebJS API Trigger',
+		displayName: 'WhatsApp Web API Trigger (WWebJS)',
 		name: 'wWebJsApiTrigger',
 		icon: 'file:wwebjs-api.svg',
 		group: ['trigger'],

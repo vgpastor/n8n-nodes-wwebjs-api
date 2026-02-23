@@ -19,7 +19,13 @@
 		"channel",
 		"newsletter",
 		"qr code",
-		"session"
+		"session",
+		"whatsapp api",
+		"whatsapp bot",
+		"whatsapp automation",
+		"whatsapp node",
+		"send whatsapp",
+		"whatsapp web api"
 	],
 	"resources": {
 		"primaryDocumentation": [

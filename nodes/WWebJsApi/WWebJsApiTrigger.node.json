@@ -15,7 +15,12 @@
 		"message received",
 		"incoming message",
 		"whatsapp trigger",
-		"chat event"
+		"chat event",
+		"whatsapp api",
+		"whatsapp notification",
+		"whatsapp bot",
+		"receive whatsapp",
+		"whatsapp web api"
 	],
 	"resources": {
 		"primaryDocumentation": [

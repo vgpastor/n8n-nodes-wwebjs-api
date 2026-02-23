@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-wwebjs-api",
-  "version": "1.2.0",
-  "description": "n8n community node for WWebJS REST API — WhatsApp Web automation via whatsapp-web.js",
+  "version": "1.2.1",
+  "description": "WhatsApp Web API node for n8n — send messages, manage chats, groups & contacts via WWebJS REST API (whatsapp-web.js)",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
@@ -17,11 +17,18 @@
     "wa",
     "group-chat",
     "whatsapp-bot",
-    "whatsapp-automation"
+    "whatsapp-automation",
+    "whatsapp-node",
+    "whatsapp-messages",
+    "whatsapp-web-api",
+    "send-whatsapp",
+    "n8n-whatsapp",
+    "community-node"
   ],
-  "license": "Apache-2.0",
+  "license": "MIT",
   "author": {
     "name": "Victor García Pastor",
+    "email": "info@ingenierosweb.co",
     "url": "https://github.com/vgpastor"
   },
   "homepage": "https://github.com/vgpastor/n8n-nodes-wwebjs-api",
