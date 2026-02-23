@@ -36,14 +36,14 @@ import {
 
 export class WWebJsApi implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'WWebJS API',
+		displayName: 'WhatsApp Web API (WWebJS)',
 		name: 'wWebJsApi',
 		icon: 'file:wwebjs-api.svg',
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
-		description: 'Interact with WhatsApp via WWebJS REST API — send messages, manage sessions, chats, groups, contacts and channels',
-		defaults: { name: 'WWebJS API' },
+		description: 'Interact with WhatsApp Web API via WWebJS — send messages, manage sessions, chats, groups, contacts and channels',
+		defaults: { name: 'WhatsApp Web API' },
 		inputs: ['main'] as NodeConnectionType[],
 		outputs: ['main'] as NodeConnectionType[],
 		credentials: [
