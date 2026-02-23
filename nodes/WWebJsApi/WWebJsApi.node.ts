@@ -6,7 +6,7 @@ import type {
 	INodeType,
 	INodeTypeDescription,
 	IDataObject,
-	IRequestOptions,
+	IHttpRequestOptions,
 	NodeConnectionType,
 } from 'n8n-workflow';
 import { NodeOperationError } from 'n8n-workflow';
@@ -95,11 +95,10 @@ export class WWebJsApi implements INodeType {
 				const credentials = await this.getCredentials('wWebJsApi');
 				const baseUrl = (credentials.baseUrl as string).replace(/\/$/, '');
 
-				const options: IRequestOptions = {
+				const options: IHttpRequestOptions = {
 					method: 'GET',
-					uri: `${baseUrl}/session/getSessions`,
+					url: `${baseUrl}/session/getSessions`,
 					headers: { 'Content-Type': 'application/json' },
-					json: true,
 				};
 
 				if (credentials.apiKey) {
@@ -107,7 +106,7 @@ export class WWebJsApi implements INodeType {
 				}
 
 				try {
-					const response = await this.helpers.request(options) as IDataObject;
+					const response = await this.helpers.httpRequest(options) as IDataObject;
 					const sessions = (response.data ?? response) as Array<{ id: string; status: string }>;
 
 					if (!Array.isArray(sessions)) {

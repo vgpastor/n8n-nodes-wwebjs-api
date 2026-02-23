@@ -35,7 +35,7 @@ function createMockExecuteFunctions(opts: {
 		}),
 		getNode: vi.fn(() => ({ name: 'WWebJS API', type: 'wWebJsApi' })),
 		helpers: {
-			request: vi.fn(async () => {
+			httpRequest: vi.fn(async () => {
 				if (opts.requestError) {
 					throw opts.requestError;
 				}
@@ -305,7 +305,7 @@ describe('WWebJsApi Node — execute()', () => {
 			});
 
 			// Override request mock: fail on second call
-			(mockFn.helpers.request as ReturnType<typeof vi.fn>).mockImplementation(async () => {
+			(mockFn.helpers.httpRequest as ReturnType<typeof vi.fn>).mockImplementation(async () => {
 				callCount++;
 				if (callCount === 2) {
 					throw new Error('Timeout on item 1');
