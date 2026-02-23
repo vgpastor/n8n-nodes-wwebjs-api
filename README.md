@@ -43,6 +43,7 @@ This package provides two nodes:
 - Webhook trigger with filters (session, chat, content, sender)
 - Webhook authentication (Header Auth, HMAC signature)
 - Input validation with descriptive error messages
+- **Multi-item support** — processes each input item independently with `pairedItem` tracking and input data forwarding
 
 ## Compatibility
 
@@ -387,6 +388,14 @@ Secure your webhook endpoint:
 2. Add **WWebJS API** node with **Message → Forward**
 3. Use `{{ $json.data.id._serialized }}` for Message ID
 4. Set destination Chat ID
+
+### Send a message to multiple contacts (multi-item)
+
+1. Add a node that outputs multiple items (e.g., a **Code** node returning a list of contacts)
+2. Connect it to **WWebJS API** → **Client → Send Message**
+3. Use expressions: **Chat ID** = `{{ $json.chatId }}`, **Message Text** = `Hello {{ $json.name }}!`
+4. The node processes each item independently — all contacts receive their message
+5. Output preserves the original input data (e.g., `name`, `chatId`) merged with the API response (`success`, `messageId`), so downstream nodes can access both
 
 ## Webhook Payload Structure
 
