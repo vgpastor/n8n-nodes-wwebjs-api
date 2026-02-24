@@ -1,0 +1,144 @@
+{
+  "name": "WWebJS API Demo — send a WhatsApp message in 3 steps",
+  "nodes": [
+    {
+      "id": "d1000001-0001-4000-8000-000000000001",
+      "name": "Click ▶ Test Workflow to start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [260, 300],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "d1000001-0002-4000-8000-000000000002",
+      "name": "1. List All Sessions",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApi",
+      "position": [500, 300],
+      "parameters": {
+        "resource": "session",
+        "operation": "getSessions"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "d1000001-0006-4000-8000-000000000006",
+      "name": "Pick First Session",
+      "type": "n8n-nodes-base.set",
+      "position": [740, 300],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-sessionId",
+              "name": "sessionId",
+              "value": "={{ $json.result[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "d1000001-0003-4000-8000-000000000003",
+      "name": "2. Get Session Status",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApi",
+      "position": [980, 300],
+      "parameters": {
+        "resource": "session",
+        "operation": "getStatus",
+        "sessionId": "={{ $json.sessionId }}"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "d1000001-0004-4000-8000-000000000004",
+      "name": "3. Send WhatsApp Message",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApi",
+      "position": [1220, 300],
+      "parameters": {
+        "resource": "client",
+        "operation": "sendMessage",
+        "sessionId": "={{ $('Pick First Session').item.json.sessionId }}",
+        "chatId": "REPLACE_WITH_NUMBER@c.us",
+        "contentType": "string",
+        "content": "Hello from n8n! ✅ This message was sent using the WhatsApp Web API (WWebJS) community node."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "d1000001-1001-4000-8000-000000000001",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [60, 20],
+      "parameters": {
+        "width": 1380,
+        "height": 230,
+        "color": 2,
+        "content": "## WWebJS API Demo — send a WhatsApp message in 3 steps\n\n### How it works\n1. Click **Test Workflow** to start manually (no webhook needed).\n2. **List All Sessions** calls `/session/getSessions` → returns `{ success, result: [\"session1\", \"session2\", ...] }`.\n3. **Pick First Session** extracts `result[0]` so only one session is used, even if you have many.\n4. **Get Session Status** verifies the session `state` is `CONNECTED`.\n5. **Send WhatsApp Message** sends a test message to the phone number you set.\n\n### Setup\n1. Add your WWebJS API credentials (base URL of your wwebjs-api server + optional API key).\n2. Replace `REPLACE_WITH_NUMBER@c.us` in the last node with a real phone number (e.g. `34612345678@c.us`).\n3. Press **Test Workflow** and check your phone!"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "d1000001-1002-4000-8000-000000000002",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [180, 250],
+      "parameters": {
+        "width": 240,
+        "height": 140,
+        "content": "## Start\nManual trigger — just press ▶"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "d1000001-1003-4000-8000-000000000003",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [420, 250],
+      "parameters": {
+        "width": 500,
+        "height": 140,
+        "content": "## Session\nLists sessions, picks `result[0]`, and checks `state: CONNECTED`."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "d1000001-1004-4000-8000-000000000004",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1140, 250],
+      "parameters": {
+        "width": 260,
+        "height": 140,
+        "content": "## Send message\nSends a test WhatsApp message to the number you set."
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Click ▶ Test Workflow to start": {
+      "main": [
+        [{ "node": "1. List All Sessions", "type": "main", "index": 0 }]
+      ]
+    },
+    "1. List All Sessions": {
+      "main": [
+        [{ "node": "Pick First Session", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pick First Session": {
+      "main": [
+        [{ "node": "2. Get Session Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "2. Get Session Status": {
+      "main": [
+        [{ "node": "3. Send WhatsApp Message", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

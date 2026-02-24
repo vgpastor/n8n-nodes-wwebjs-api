@@ -1,0 +1,170 @@
+{
+  "name": "Monitor WhatsApp session status and send Slack alerts with WWebJS API",
+  "nodes": [
+    {
+      "id": "c1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Run Every 5 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [260, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "typeVersion": 1.2
+    },
+    {
+      "id": "c1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Get All Sessions",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApi",
+      "position": [500, 300],
+      "parameters": {
+        "resource": "session",
+        "operation": "getSessions"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "c1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Check Each Session Status",
+      "type": "n8n-nodes-base.if",
+      "position": [740, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "operator": { "type": "string", "operation": "notEquals" },
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "WORKING"
+            },
+            {
+              "operator": { "type": "string", "operation": "equals" },
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "STOPPED"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 2.2
+    },
+    {
+      "id": "c1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "position": [1000, 200],
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": ""
+        },
+        "text": "=⚠️ *WhatsApp Session Alert*\n\nSession `{{ $json.id }}` is *{{ $json.status }}*.\n\nTimestamp: {{ $now.toISO() }}\n\nPlease check your wwebjs-api server and reconnect if needed.",
+        "otherOptions": {
+          "includeLinkToWorkflow": true
+        }
+      },
+      "typeVersion": 2.3
+    },
+    {
+      "id": "c1b2c3d4-0005-4000-8000-000000000005",
+      "name": "Session OK — No Action",
+      "type": "n8n-nodes-base.noOp",
+      "position": [1000, 440],
+      "parameters": {},
+      "typeVersion": 1
+    },
+    {
+      "id": "c1b2c3d4-1001-4000-8000-000000000001",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [60, -80],
+      "parameters": {
+        "width": 1180,
+        "height": 290,
+        "color": 2,
+        "content": "## Monitor WhatsApp session status and send Slack alerts with WWebJS API\n\n### How it works\n1. A **Schedule Trigger** runs every 5 minutes (configurable).\n2. The **WWebJS API** node fetches all active sessions from your wwebjs-api server.\n3. An **If** node checks whether each session status is healthy (`WORKING`).\n4. If a session is **not** in `WORKING` state (e.g., `STOPPED`, `SCAN_QR_CODE`, `FAILED`), a **Slack** message is posted to your monitoring channel.\n5. Healthy sessions are silently ignored (No-Op).\n\n### Setup steps\n1. Install the `n8n-nodes-wwebjs-api` community node in your **self-hosted** n8n instance.\n2. Configure WWebJS API credentials pointing to your [wwebjs-api](https://github.com/avoylenko/wwebjs-api) server.\n3. Connect your **Slack** credentials and set the target channel ID in the \"Send Slack Alert\" node.\n4. Adjust the schedule interval if needed (default: every 5 minutes).\n5. Activate the workflow.\n\n### Customization tips\n- Replace Slack with **Email**, **Telegram**, or **Discord** for alerts on a different platform.\n- Add a **WWebJS API → Start Session** node after the alert to auto-restart stopped sessions.\n- Use a **Filter** node to monitor only specific session IDs."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "c1b2c3d4-1002-4000-8000-000000000002",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [60, 600],
+      "parameters": {
+        "width": 500,
+        "height": 100,
+        "color": 5,
+        "content": "## ⚠️ Community node — self-hosted n8n only\nThis workflow uses the `n8n-nodes-wwebjs-api` community node and requires a running [wwebjs-api](https://github.com/avoylenko/wwebjs-api) server."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "c1b2c3d4-1003-4000-8000-000000000003",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [180, 220],
+      "parameters": {
+        "width": 240,
+        "height": 180,
+        "content": "## Schedule\nPolls every 5 minutes. Adjust interval as needed."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "c1b2c3d4-1004-4000-8000-000000000004",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [420, 220],
+      "parameters": {
+        "width": 240,
+        "height": 180,
+        "content": "## Fetch Sessions\nRetrieves all sessions and their status from the WWebJS API."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "c1b2c3d4-1005-4000-8000-000000000005",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [660, 220],
+      "parameters": {
+        "width": 540,
+        "height": 340,
+        "content": "## Health Check\nRoutes unhealthy sessions to Slack alert; healthy ones are silently ignored."
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "Run Every 5 Minutes": {
+      "main": [
+        [{ "node": "Get All Sessions", "type": "main", "index": 0 }]
+      ]
+    },
+    "Get All Sessions": {
+      "main": [
+        [{ "node": "Check Each Session Status", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Each Session Status": {
+      "main": [
+        [{ "node": "Send Slack Alert", "type": "main", "index": 0 }],
+        [{ "node": "Session OK — No Action", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}
