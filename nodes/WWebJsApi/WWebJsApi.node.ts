@@ -46,6 +46,64 @@ export class WWebJsApi implements INodeType {
 		defaults: { name: 'WhatsApp Web API' },
 		inputs: ['main'] as NodeConnectionType[],
 		outputs: ['main'] as NodeConnectionType[],
+		hints: [
+			// ── session/getSessions ──
+			{
+				message: 'Output merges input fields with API response. API adds: <code>success</code>, <code>result</code>: array of session name strings — e.g. <code>["session1", "session2"]</code>',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["resource"] === "session" && $parameter["operation"] === "getSessions" }}',
+			},
+			// ── session/getStatus ──
+			{
+				message: 'Output merges input fields with API response. API adds: <code>success</code>, <code>state</code> ("CONNECTED" | null), <code>message</code> ("session_connected" | "session_not_found" | "session_not_connected")',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["resource"] === "session" && $parameter["operation"] === "getStatus" }}',
+			},
+			// ── client/sendMessage ──
+			{
+				message: 'Output merges input fields with API response. API adds: <code>success</code>, <code>message</code>: the sent Message object — includes <code>message.id</code>, <code>message.from</code>, <code>message.to</code>, <code>message.body</code>, <code>message.timestamp</code>, <code>message.type</code>, …',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["resource"] === "client" && $parameter["operation"] === "sendMessage" }}',
+			},
+			// ── client/getChats ──
+			{
+				message: 'Output merges input fields with API response. API adds: <code>success</code>, <code>chats</code>: array of Chat objects — each has <code>id</code>, <code>name</code>, <code>isGroup</code>, <code>isReadOnly</code>, <code>unreadCount</code>, <code>timestamp</code>, <code>archived</code>, <code>pinned</code>, …',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["resource"] === "client" && $parameter["operation"] === "getChats" }}',
+			},
+			// ── client/getContacts ──
+			{
+				message: 'Output merges input fields with API response. API adds: <code>success</code>, <code>contacts</code>: array of Contact objects — each has <code>id</code>, <code>number</code>, <code>name</code>, <code>shortName</code>, <code>pushname</code>, <code>isUser</code>, <code>isGroup</code>, <code>isMyContact</code>, <code>isBlocked</code>, …',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["resource"] === "client" && $parameter["operation"] === "getContacts" }}',
+			},
+			// ── message/getInfo ──
+			{
+				message: 'Output merges input fields with API response. API adds: <code>success</code>, <code>info</code>: MessageInfo object with delivery/read receipts — may be null if the message is not sent by you',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["resource"] === "message" && $parameter["operation"] === "getInfo" }}',
+			},
+			// ── chat/fetchMessages ──
+			{
+				message: 'Output merges input fields with API response. API adds: <code>success</code>, <code>messages</code>: array of Message objects (sorted earliest → latest) — each has <code>id</code>, <code>body</code>, <code>type</code>, <code>timestamp</code>, <code>from</code>, <code>to</code>, <code>fromMe</code>, <code>hasMedia</code>, …',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["resource"] === "chat" && $parameter["operation"] === "fetchMessages" }}',
+			},
+		],
 		credentials: [
 			{
 				name: 'wWebJsApi',
@@ -107,16 +165,20 @@ export class WWebJsApi implements INodeType {
 
 				try {
 					const response = await this.helpers.httpRequest(options) as IDataObject;
-					const sessions = (response.data ?? response) as Array<{ id: string; status: string }>;
+					const sessions = (response.result ?? response.data ?? response) as string[] | Array<{ id: string; status: string }>;
 
 					if (!Array.isArray(sessions)) {
 						return [];
 					}
 
-					return sessions.map((s) => ({
-						name: `${s.id} (${s.status})`,
-						value: s.id,
-					}));
+					return sessions.map((s) => {
+						// The API returns an array of session name strings: ["patroltech", "rocstatus", ...]
+						if (typeof s === 'string') {
+							return { name: s, value: s };
+						}
+						// Fallback for future API versions that may return objects with id/status
+						return { name: `${s.id} (${s.status})`, value: s.id };
+					});
 				} catch {
 					// If the API is unreachable, return empty list so the user can still type manually
 					return [];

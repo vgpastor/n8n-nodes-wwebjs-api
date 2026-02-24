@@ -1,0 +1,189 @@
+{
+  "name": "Log incoming WhatsApp messages to Google Sheets with WWebJS API",
+  "nodes": [
+    {
+      "id": "b1b2c3d4-0001-4000-8000-000000000001",
+      "name": "WhatsApp Message Received",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApiTrigger",
+      "position": [260, 300],
+      "parameters": {
+        "events": ["message"],
+        "authentication": "none",
+        "filters": {
+          "excludeFromMe": true
+        }
+      },
+      "typeVersion": 1,
+      "webhookId": "wwebjs-log-sheets-trigger"
+    },
+    {
+      "id": "b1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Format Message Data",
+      "type": "n8n-nodes-base.set",
+      "position": [500, 300],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-timestamp",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "field-from",
+              "name": "from",
+              "value": "={{ $json.data.from }}",
+              "type": "string"
+            },
+            {
+              "id": "field-senderName",
+              "name": "senderName",
+              "value": "={{ $json.data.notifyName || 'Unknown' }}",
+              "type": "string"
+            },
+            {
+              "id": "field-chatId",
+              "name": "chatId",
+              "value": "={{ $json.data.to || $json.data.from }}",
+              "type": "string"
+            },
+            {
+              "id": "field-body",
+              "name": "messageBody",
+              "value": "={{ $json.data.body }}",
+              "type": "string"
+            },
+            {
+              "id": "field-type",
+              "name": "messageType",
+              "value": "={{ $json.data.type }}",
+              "type": "string"
+            },
+            {
+              "id": "field-hasMedia",
+              "name": "hasMedia",
+              "value": "={{ $json.data.hasMedia }}",
+              "type": "boolean"
+            },
+            {
+              "id": "field-isGroup",
+              "name": "isGroup",
+              "value": "={{ $json.data.from.includes('@g.us') }}",
+              "type": "boolean"
+            },
+            {
+              "id": "field-session",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "b1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Append to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "position": [740, 300],
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "typeVersion": 4.5
+    },
+    {
+      "id": "b1b2c3d4-1001-4000-8000-000000000001",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [60, -80],
+      "parameters": {
+        "width": 900,
+        "height": 300,
+        "color": 2,
+        "content": "## Log incoming WhatsApp messages to Google Sheets with WWebJS API\n\n### How it works\n1. The **WWebJS API Trigger** receives a webhook for every incoming WhatsApp message (excluding your own).\n2. A **Set** node extracts and formats the key fields: timestamp, sender, chat ID, message body, type, media flag, and whether it is a group message.\n3. The **Google Sheets** node appends a new row for each message to your spreadsheet.\n\n### Setup steps\n1. Install the `n8n-nodes-wwebjs-api` community node in your **self-hosted** n8n instance.\n2. Configure WWebJS API credentials pointing to your [wwebjs-api](https://github.com/avoylenko/wwebjs-api) server.\n3. Start a WhatsApp session and scan the QR code.\n4. Create a Google Sheet with these column headers: `timestamp`, `from`, `senderName`, `chatId`, `messageBody`, `messageType`, `hasMedia`, `isGroup`, `sessionId`.\n5. Connect your Google Sheets credentials and select the spreadsheet in the \"Append to Google Sheets\" node.\n6. Point the wwebjs-api webhook URL to this trigger, then activate the workflow.\n\n### Customization tips\n- Add a **Filter** node before the sheet to log only group messages or only individual chats.\n- Add a **Slack** or **Email** node after the sheet to get notified about new messages in real time."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "b1b2c3d4-1002-4000-8000-000000000002",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [60, 680],
+      "parameters": {
+        "width": 500,
+        "height": 100,
+        "color": 5,
+        "content": "## ⚠️ Community node — self-hosted n8n only\nThis workflow uses the `n8n-nodes-wwebjs-api` community node and requires a running [wwebjs-api](https://github.com/avoylenko/wwebjs-api) server."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "b1b2c3d4-1003-4000-8000-000000000003",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [180, 220],
+      "parameters": {
+        "width": 240,
+        "height": 180,
+        "content": "## Trigger\nReceives all incoming WhatsApp messages (own messages excluded)."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "b1b2c3d4-1004-4000-8000-000000000004",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [420, 220],
+      "parameters": {
+        "width": 240,
+        "height": 180,
+        "content": "## Format\nExtracts timestamp, sender, body, type, and group flag into clean columns."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "b1b2c3d4-1005-4000-8000-000000000005",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [660, 220],
+      "parameters": {
+        "width": 240,
+        "height": 180,
+        "content": "## Log\nAppends each message as a new row in Google Sheets."
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "WhatsApp Message Received": {
+      "main": [
+        [{ "node": "Format Message Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Format Message Data": {
+      "main": [
+        [{ "node": "Append to Google Sheets", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

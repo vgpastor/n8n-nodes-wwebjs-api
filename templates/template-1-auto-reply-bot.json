@@ -1,0 +1,262 @@
+{
+  "name": "Auto-reply to incoming WhatsApp messages with WWebJS API",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "WhatsApp Message Received",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApiTrigger",
+      "position": [260, 300],
+      "parameters": {
+        "events": ["message"],
+        "authentication": "none",
+        "filters": {
+          "excludeFromMe": true,
+          "individualsOnly": true
+        }
+      },
+      "typeVersion": 1,
+      "webhookId": "wwebjs-auto-reply-trigger"
+    },
+    {
+      "id": "a1b2c3d4-0002-4000-8000-000000000002",
+      "name": "Extract Message Data",
+      "type": "n8n-nodes-base.set",
+      "position": [500, 300],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "field-chatId",
+              "name": "chatId",
+              "value": "={{ $json.data.from }}",
+              "type": "string"
+            },
+            {
+              "id": "field-body",
+              "name": "messageBody",
+              "value": "={{ $json.data.body }}",
+              "type": "string"
+            },
+            {
+              "id": "field-senderName",
+              "name": "senderName",
+              "value": "={{ $json.data.notifyName || $json.data.from }}",
+              "type": "string"
+            },
+            {
+              "id": "field-sessionId",
+              "name": "sessionId",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "typeVersion": 3.4
+    },
+    {
+      "id": "a1b2c3d4-0003-4000-8000-000000000003",
+      "name": "Check Message Content",
+      "type": "n8n-nodes-base.switch",
+      "position": [740, 300],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "greeting",
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": false,
+                  "typeValidation": "loose"
+                },
+                "combinator": "or",
+                "conditions": [
+                  {
+                    "operator": { "type": "string", "operation": "contains" },
+                    "leftValue": "={{ $json.messageBody }}",
+                    "rightValue": "hello"
+                  },
+                  {
+                    "operator": { "type": "string", "operation": "contains" },
+                    "leftValue": "={{ $json.messageBody }}",
+                    "rightValue": "hi"
+                  },
+                  {
+                    "operator": { "type": "string", "operation": "contains" },
+                    "leftValue": "={{ $json.messageBody }}",
+                    "rightValue": "hey"
+                  }
+                ]
+              },
+              "renameOutput": true
+            },
+            {
+              "outputKey": "help",
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": false,
+                  "typeValidation": "loose"
+                },
+                "combinator": "or",
+                "conditions": [
+                  {
+                    "operator": { "type": "string", "operation": "contains" },
+                    "leftValue": "={{ $json.messageBody }}",
+                    "rightValue": "help"
+                  },
+                  {
+                    "operator": { "type": "string", "operation": "contains" },
+                    "leftValue": "={{ $json.messageBody }}",
+                    "rightValue": "support"
+                  }
+                ]
+              },
+              "renameOutput": true
+            },
+            {
+              "outputKey": "default",
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "caseSensitive": true,
+                  "typeValidation": "loose"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "operator": { "type": "string", "operation": "notEmpty", "singleValue": true },
+                    "leftValue": "={{ $json.messageBody }}"
+                  }
+                ]
+              },
+              "renameOutput": true
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "typeVersion": 3.2
+    },
+    {
+      "id": "a1b2c3d4-0004-4000-8000-000000000004",
+      "name": "Reply with Greeting",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApi",
+      "position": [1020, 140],
+      "parameters": {
+        "resource": "client",
+        "operation": "sendMessage",
+        "sessionId": "={{ $json.sessionId }}",
+        "chatId": "={{ $json.chatId }}",
+        "contentType": "string",
+        "content": "=Hi {{ $json.senderName }}! 👋 Welcome! How can I help you today?\n\nType *help* to see available options."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "a1b2c3d4-0005-4000-8000-000000000005",
+      "name": "Reply with Help Menu",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApi",
+      "position": [1020, 340],
+      "parameters": {
+        "resource": "client",
+        "operation": "sendMessage",
+        "sessionId": "={{ $json.sessionId }}",
+        "chatId": "={{ $json.chatId }}",
+        "contentType": "string",
+        "content": "=📋 *Help Menu*\n\nHere are the things I can help you with:\n\n1️⃣ *Business hours* — Mon-Fri 9AM-6PM\n2️⃣ *Contact us* — email@example.com\n3️⃣ *Website* — https://example.com\n\nOr just type your question and a team member will get back to you shortly!"
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "a1b2c3d4-0006-4000-8000-000000000006",
+      "name": "Reply with Default",
+      "type": "n8n-nodes-wwebjs-api.wWebJsApi",
+      "position": [1020, 540],
+      "parameters": {
+        "resource": "client",
+        "operation": "sendMessage",
+        "sessionId": "={{ $json.sessionId }}",
+        "chatId": "={{ $json.chatId }}",
+        "contentType": "string",
+        "content": "=Thanks for your message! 🙏\n\nA team member will review it and get back to you soon.\n\nType *help* for quick options."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "a1b2c3d4-1001-4000-8000-000000000001",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [60, -80],
+      "parameters": {
+        "width": 1180,
+        "height": 280,
+        "color": 2,
+        "content": "## Auto-reply to incoming WhatsApp messages with WWebJS API\n\n### How it works\n1. The **WWebJS API Trigger** listens for incoming WhatsApp messages (excluding your own and group chats).\n2. A **Set** node extracts sender info, chat ID, and message body.\n3. A **Switch** node routes messages by keyword: greetings, help requests, or a default catch-all.\n4. Each branch sends a tailored auto-reply via the **WWebJS API** node.\n\n### Setup steps\n1. Install the `n8n-nodes-wwebjs-api` community node in your **self-hosted** n8n instance.\n2. Configure WWebJS API credentials (API base URL + optional API key) pointing to your [wwebjs-api](https://github.com/avoylenko/wwebjs-api) server.\n3. Start a WhatsApp session and scan the QR code.\n4. Set the webhook URL in your wwebjs-api config to point to this trigger's URL.\n5. Customize the reply messages in each \"Reply\" node to match your business.\n6. Activate the workflow."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "a1b2c3d4-1002-4000-8000-000000000002",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [60, 700],
+      "parameters": {
+        "width": 500,
+        "height": 100,
+        "color": 5,
+        "content": "## ⚠️ Community node — self-hosted n8n only\nThis workflow uses the `n8n-nodes-wwebjs-api` community node and requires a running [wwebjs-api](https://github.com/avoylenko/wwebjs-api) server."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "a1b2c3d4-1003-4000-8000-000000000003",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [180, 220],
+      "parameters": {
+        "width": 240,
+        "height": 200,
+        "content": "## Trigger\nListens for new WhatsApp messages, filtering out own messages and groups."
+      },
+      "typeVersion": 1
+    },
+    {
+      "id": "a1b2c3d4-1004-4000-8000-000000000004",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [660, 220],
+      "parameters": {
+        "width": 270,
+        "height": 420,
+        "content": "## Route & Reply\nKeyword-based routing sends a different auto-reply for greetings, help, or a default response."
+      },
+      "typeVersion": 1
+    }
+  ],
+  "connections": {
+    "WhatsApp Message Received": {
+      "main": [
+        [{ "node": "Extract Message Data", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Message Data": {
+      "main": [
+        [{ "node": "Check Message Content", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check Message Content": {
+      "main": [
+        [{ "node": "Reply with Greeting", "type": "main", "index": 0 }],
+        [{ "node": "Reply with Help Menu", "type": "main", "index": 0 }],
+        [{ "node": "Reply with Default", "type": "main", "index": 0 }]
+      ]
+    }
+  }
+}

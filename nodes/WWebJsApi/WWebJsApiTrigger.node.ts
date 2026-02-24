@@ -6,7 +6,7 @@ import type {
 	IDataObject,
 	NodeConnectionType,
 } from 'n8n-workflow';
-import type { TriggerFilters, MessageWebhookData, WebhookPayload } from './types';
+import type { TriggerFilters, WebhookPayload } from './types';
 import { safeString, safeBoolean, extractChatId, validateSignature } from './triggerFilters';
 
 export class WWebJsApiTrigger implements INodeType {
@@ -21,6 +21,56 @@ export class WWebJsApiTrigger implements INodeType {
 		defaults: { name: 'WhatsApp Trigger' },
 		inputs: [] as NodeConnectionType[],
 		outputs: ['main'] as NodeConnectionType[],
+		hints: [
+			// ── message / message_create ──
+			{
+				message: '<b>message / message_create</b> webhook payload:<br><code>dataType</code>: "message" | "message_create"<br><code>sessionId</code>: session name<br><code>data.message</code>: full Message object — includes <code>.id</code>, <code>.from</code>, <code>.to</code>, <code>.body</code>, <code>.fromMe</code>, <code>.hasMedia</code>, <code>.type</code> ("chat" | "image" | "video" | "audio" | "ptt" | "document" | "sticker" | …), <code>.timestamp</code>, <code>.notifyName</code>',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["events"].includes("message") || $parameter["events"].includes("message_create") }}',
+			},
+			// ── message_ack ──
+			{
+				message: '<b>message_ack</b> webhook payload:<br><code>dataType</code>: "message_ack"<br><code>sessionId</code>: session name<br><code>data.message</code>: full Message object<br><code>data.ack</code>: ack level — 1 (sent) | 2 (delivered) | 3 (read) | 4 (played)',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["events"].includes("message_ack") }}',
+			},
+			// ── qr ──
+			{
+				message: '<b>qr</b> webhook payload:<br><code>dataType</code>: "qr"<br><code>sessionId</code>: session name<br><code>data.qr</code>: QR code string to scan with WhatsApp',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["events"].includes("qr") }}',
+			},
+			// ── call ──
+			{
+				message: '<b>call</b> webhook payload:<br><code>dataType</code>: "call"<br><code>sessionId</code>: session name<br><code>data.call</code>: Call object — includes <code>.from</code>, <code>.isVideo</code>, <code>.isGroup</code>, <code>.id</code>, …',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["events"].includes("call") }}',
+			},
+			// ── group_join / group_leave ──
+			{
+				message: '<b>group_join / group_leave</b> webhook payload:<br><code>dataType</code>: "group_join" | "group_leave"<br><code>sessionId</code>: session name<br><code>data.notification</code>: GroupNotification object — includes <code>.chatId</code>, <code>.recipientIds</code>, <code>.id</code>, <code>.type</code>, …',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["events"].includes("group_join") || $parameter["events"].includes("group_leave") }}',
+			},
+			// ── ready / authenticated / disconnected / change_state / auth_failure ──
+			{
+				message: '<b>Status events</b> webhook payload:<br><code>dataType</code>: "ready" | "authenticated" | "disconnected" | "change_state" | "status" (auth_failure)<br><code>sessionId</code>: session name<br><code>data</code>: varies — <code>data.reason</code> for disconnected, <code>data.state</code> for change_state, <code>data.msg</code> for auth_failure, empty for ready/authenticated',
+				type: 'info',
+				location: 'outputPane',
+				whenToDisplay: 'beforeExecution',
+				displayCondition: '={{ $parameter["events"].includes("ready") || $parameter["events"].includes("authenticated") || $parameter["events"].includes("disconnected") || $parameter["events"].includes("change_state") || $parameter["events"].includes("auth_failure") }}',
+			},
+		],
 		webhooks: [
 			{
 				name: 'default',
@@ -218,10 +268,13 @@ export class WWebJsApiTrigger implements INodeType {
 		}
 
 		// ── Extract nested data for filter matching ──
-		const data = (body.data as MessageWebhookData) ?? {};
-		const chatId = extractChatId(data);
-		const messageBody = safeString(data.body);
-		const fromMe = safeBoolean(data.fromMe);
+		// The webhook payload is: { dataType, data: { message, ... }, sessionId }
+		// For message events, the actual Message object is nested under data.message
+		const rawData = (body.data ?? {}) as IDataObject;
+		const messageObj = (rawData.message as IDataObject) ?? rawData;
+		const chatId = extractChatId(messageObj);
+		const messageBody = safeString(messageObj.body);
+		const fromMe = safeBoolean(messageObj.fromMe);
 
 		// ── Get Filters ──
 		const filters = this.getNodeParameter('filters', {}) as TriggerFilters;
